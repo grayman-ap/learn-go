@@ -6,13 +6,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 	_ "github.com/stretchr/testify/require"
+	"github.com/techschool/simplebank/util"
 )
 
 func TestCreateAccount(t *testing.T) {
 	arg := CreateAccountParams{
-		Owner:    "tom", // randomly generated?
-		Balance:  100,
-		Currency: "USD",
+		Owner:    util.RandomOwner(), // randomly generated?
+		Balance:  util.RandomMoney(),
+		Currency: util.RandomCurrency(),
 	}
 	account, err := testQueries.CreateAccount(context.Background(), arg)
 	require.NoError(t, err)
