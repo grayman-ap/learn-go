@@ -60,7 +60,7 @@ func (q *Queries) GetEntries(ctx context.Context, id int64) (Entry, error) {
 	return i, err
 }
 
-const listEntries = `-- name: ListEntries :one
+const listEntries = `-- name: ListEntries :many
 SELECT id, account_id, amount, created_at FROM entries
 ORDER BY id
 LIMIT $1
@@ -72,16 +72,32 @@ type ListEntriesParams struct {
 	Offset int32 `json:"offset"`
 }
 
-func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) (Entry, error) {
-	row := q.db.QueryRowContext(ctx, listEntries, arg.Limit, arg.Offset)
-	var i Entry
-	err := row.Scan(
-		&i.ID,
-		&i.AccountID,
-		&i.Amount,
-		&i.CreatedAt,
-	)
-	return i, err
+func (q *Queries) ListEntries(ctx context.Context, arg ListEntriesParams) ([]Entry, error) {
+	rows, err := q.db.QueryContext(ctx, listEntries, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Entry
+	for rows.Next() {
+		var i Entry
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.Amount,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const updateEntry = `-- name: UpdateEntry :one
