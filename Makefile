@@ -17,4 +17,7 @@ sqlc:
 mod: 
 	go mod init github.com/techschool/simplebank
 
+test: 
+	go test -v -cover ./...
+	
 .PHONY: postgres createdb dropdb migrateup migratedown sqlc
